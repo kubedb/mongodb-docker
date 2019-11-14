@@ -26,7 +26,7 @@ RUN set -x                                                                      
   && chmod 755 peer-finder
 
 
-FROM mongo:3.4.17
+FROM mongo:3.4.22
 
 COPY replicaset.sh /usr/local/bin/
 COPY configdb.sh /usr/local/bin/
@@ -48,7 +48,7 @@ ENV SSL_MODE ""
 ENV CLUSTER_AUTH_MODE ""
 
 # For starting mongodb container
-# default entrypoint of parent mongo:3.4.17
+# default entrypoint of parent mongo:3.4.22
 # ENTRYPOINT ["docker-entrypoint.sh"]
 
 # For starting bootstraper init container (for mongodb replicaset)
