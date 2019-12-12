@@ -28,7 +28,7 @@ if [[ ${SSL_MODE} != "disabled" ]] && [[ -f "$client_pem" ]] && [[ -f "$ca_crt" 
   admin_user="${MONGO_INITDB_ROOT_USERNAME:-}"
   admin_password="${MONGO_INITDB_ROOT_PASSWORD:-}"
   admin_creds=(-u "$admin_user" -p "$admin_password" --authenticationDatabase admin)
-  ssl_args=(--ssl --sslCAFile "$ca_crt" --sslPEMKeyFile "$client_pem")
+  ssl_args=(--tls --tlsCAFile "$ca_crt" --tlsPEMKeyFile "$client_pem")
 
   user=$(openssl x509 -in "$client_pem" -inform PEM -subject -nameopt RFC2253 -noout)
   # the output is similar to `subject= CN=root,O=kubedb:client`. so, cut out 'subject= '
