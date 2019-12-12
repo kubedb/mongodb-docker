@@ -40,7 +40,7 @@ function shutdown_mongo() {
     args='force: true'
   fi
   log "Shutting down MongoDB ($args)..."
-  mongo admin "${admin_creds[@]}" "${ssl_args[@]}" --eval "db.shutdownServer({$args})"
+  mongo admin --host localhost "${admin_creds[@]}" "${ssl_args[@]}" --eval "db.shutdownServer({$args})"
 }
 
 my_hostname=$(hostname)
@@ -67,8 +67,8 @@ if [[ ${SSL_MODE} != "disabled" ]]; then
   log "Generating certificate"
 
   pem=/data/configdb/mongo.pem
-  ssl_args=(--ssl --sslCAFile "$ca_crt" --sslPEMKeyFile "$pem")
-  auth_args=(--clusterAuthMode ${CLUSTER_AUTH_MODE} --sslMode ${SSL_MODE} --sslCAFile "$ca_crt" --sslPEMKeyFile "$pem" --keyFile=/data/configdb/key.txt)
+  ssl_args=(--tls --tlsCAFile "$ca_crt" --tlsCertificateKeyFile "$pem")
+  auth_args=(--clusterAuthMode ${CLUSTER_AUTH_MODE} --sslMode ${SSL_MODE} --tlsCAFile "$ca_crt" --tlsCertificateKeyFile "$pem" --keyFile=/data/configdb/key.txt)
 
   # extract pod-name.gvr-svc-name.namespace.svc from service_name, which is pod-name.gvr-svc-name.namespace.svc.cluster.local
   svc_name="$(echo "${service_name%.svc.*}").svc"
@@ -92,7 +92,6 @@ DNS.2 = $my_hostname
 DNS.3 = $service_name
 DNS.4 = $svc_name
 DNS.5 = localhost
-DNS.6 = 127.0.0.1
 EOL
 
   # Generate the certs
@@ -114,7 +113,7 @@ log "Starting a MongoDB instance..."
 mongod --config /data/configdb/mongod.conf --dbpath=/data/db --replSet="$replica_set" --port=27017 "${auth_args[@]}" --bind_ip=0.0.0.0 2>&1 | tee -a /work-dir/log.txt &
 
 log "Waiting for MongoDB to be ready..."
-until mongo "${ssl_args[@]}" --eval "db.adminCommand('ping')"; do
+until mongo --host localhost "${ssl_args[@]}" --eval "db.adminCommand('ping')"; do
   log "Retrying..."
   sleep 2
 done
@@ -131,7 +130,7 @@ for peer in "${peers[@]}"; do
     sleep 3
 
     log 'Waiting for replica to reach SECONDARY state...'
-    until printf '.' && [[ $(mongo admin "${admin_creds[@]}" "${ssl_args[@]}" --quiet --eval "rs.status().myState") == '2' ]]; do
+    until printf '.' && [[ $(mongo admin --host localhost "${admin_creds[@]}" "${ssl_args[@]}" --quiet --eval "rs.status().myState") == '2' ]]; do
       sleep 1
     done
 
@@ -144,14 +143,14 @@ for peer in "${peers[@]}"; do
 done
 
 # else initiate a replica set with yourself.
-if mongo "${ssl_args[@]}" --eval "rs.status()" | grep "no replset config has been received"; then
+if mongo --host localhost "${ssl_args[@]}" --eval "rs.status()" | grep "no replset config has been received"; then
   log "Initiating a new replica set with myself ($service_name)..."
-  mongo "${ssl_args[@]}" --eval "rs.initiate({'_id': '$replica_set', 'members': [{'_id': 0, 'host': '$service_name'}]})"
+  mongo --host localhost "${ssl_args[@]}" --eval "rs.initiate({'_id': '$replica_set', 'members': [{'_id': 0, 'host': '$service_name'}]})"
 
   sleep 3
 
   log 'Waiting for replica to reach PRIMARY state...'
-  until printf '.' && [[ $(mongo "${ssl_args[@]}" --quiet --eval "rs.status().myState") == '1' ]]; do
+  until printf '.' && [[ $(mongo --host localhost "${ssl_args[@]}" --quiet --eval "rs.status().myState") == '1' ]]; do
     sleep 1
   done
 
@@ -159,7 +158,7 @@ if mongo "${ssl_args[@]}" --eval "rs.status()" | grep "no replset config has bee
 
   if [[ "$AUTH" == "true" ]]; then
     log "Creating admin user..."
-    mongo admin "${ssl_args[@]}" --eval "db.createUser({user: '$admin_user', pwd: '$admin_password', roles: [{role: 'root', db: 'admin'}]})"
+    mongo admin --host localhost "${ssl_args[@]}" --eval "db.createUser({user: '$admin_user', pwd: '$admin_password', roles: [{role: 'root', db: 'admin'}]})"
   fi
 
   # Initialize Part for KubeDB.
@@ -177,7 +176,7 @@ if mongo "${ssl_args[@]}" --eval "rs.status()" | grep "no replset config has bee
         ;;
       *.js)
         echo "$0: running $f 1"
-        mongo "$MONGO_INITDB_DATABASE" "${admin_creds[@]}" "${ssl_args[@]}" "$f"
+        mongo --host localhost "$MONGO_INITDB_DATABASE" "${admin_creds[@]}" "${ssl_args[@]}" "$f"
         ;;
       *) echo "$0: ignoring $f" ;;
     esac
