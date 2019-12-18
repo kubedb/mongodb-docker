@@ -32,7 +32,7 @@ if [[ ${SSL_MODE} != "disabled" ]] && [[ -f "$client_pem" ]] && [[ -f "$ca_crt" 
 
   user=$(openssl x509 -in "$client_pem" -inform PEM -subject -nameopt RFC2253 -noout)
   # the output is similar to `subject= CN=root,O=kubedb:client`. so, cut out 'subject= '
-  user=${user#"subject= "}
+  user=${user#"subject="}
   echo "Creating root user $user for SSL..." #xref: https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication/#procedures
   mongo admin --host localhost "${admin_creds[@]}" "${ssl_args[@]}" --eval "db.getSiblingDB(\"\$external\").runCommand({createUser: \"$user\",roles:[{role: 'root', db: 'admin'}],})"
 fi
