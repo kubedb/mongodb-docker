@@ -21,10 +21,15 @@ set -eo pipefail
 
 # create client certificate as $external user
 
-client_pem="${MONGO_CLIENT_CERTIFICATE_PATH:-/data/configdb/client.pem}"
-ca_crt="${MONGO_CA_CERTIFICATE_PATH:-/data/configdb/ca.cert}"
+client_pem="${MONGO_CLIENT_CERTIFICATE_PATH:-/var/run/mongodb/tls/client.pem}"
+ca_crt="${MONGO_CA_CERTIFICATE_PATH:-/var/run/mongodb/tls/ca.crt}"
+
+if [[ ${SSL_MODE} != "disabled" ]] && ( [[ ! -f "$client_pem" ]] || [[ ! -f "$ca_crt" ]] ); then
+  echo "SSL_MODE is not disabled, but $client_pem or $ca_crt file does not exist"
+fi
 
 if [[ ${SSL_MODE} != "disabled" ]] && [[ -f "$client_pem" ]] && [[ -f "$ca_crt" ]]; then
+  echo "SSL_MODE is on. Setting up credentials"
   admin_user="${MONGO_INITDB_ROOT_USERNAME:-}"
   admin_password="${MONGO_INITDB_ROOT_PASSWORD:-}"
   admin_creds=(-u "$admin_user" -p "$admin_password" --authenticationDatabase admin)
