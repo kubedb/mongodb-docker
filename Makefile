@@ -3,7 +3,7 @@ SHELL=/bin/bash -o pipefail
 REGISTRY ?= kubedb
 BIN      := mongo
 IMAGE    := $(REGISTRY)/$(BIN)
-BASE_TAG := 4.0.11
+BASE_TAG := 4.0.11-v1
 TAG      := $(shell git describe --exact-match --abbrev=0 2>/dev/null || echo "")
 
 .PHONY: push
