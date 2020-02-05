@@ -21,8 +21,11 @@ set -eo pipefail
 
 # create client certificate as $external user
 
-client_pem="${MONGO_CLIENT_CERTIFICATE_PATH:-/data/configdb/client.pem}"
-ca_crt="${MONGO_CA_CERTIFICATE_PATH:-/data/configdb/ca.cert}"
+# TODO: Add different user's with different roles.
+# TODO: May be, convert this script to db query
+
+client_pem="${MONGO_CLIENT_CERTIFICATE_PATH:-/var/run/mongodb/tls/client.pem}"
+ca_crt="${MONGO_CA_CERTIFICATE_PATH:-/var/run/mongodb/tls/ca.crt}"
 
 if [[ ${SSL_MODE} != "disabled" ]] && [[ -f "$client_pem" ]] && [[ -f "$ca_crt" ]]; then
   admin_user="${MONGO_INITDB_ROOT_USERNAME:-}"
