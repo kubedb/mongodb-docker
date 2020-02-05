@@ -12,37 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:stretch as builder
-
-ENV DEBIAN_FRONTEND noninteractive
-ENV DEBCONF_NONINTERACTIVE_SEEN true
-
-RUN set -x \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl unzip
-
-RUN set -x                                                                                             \
-  && curl -fsSL -o peer-finder https://github.com/kmodules/peer-finder/releases/download/v1.0.1-ac/peer-finder \
-  && chmod 755 peer-finder
-
-
 FROM mongo:4.0.3
-
-COPY replicaset.sh /usr/local/bin/
-COPY configdb.sh /usr/local/bin/
-COPY sharding.sh /usr/local/bin/
-COPY mongos.sh /usr/local/bin/
-COPY --from=builder peer-finder /usr/local/bin/
 
 # Copy ssl-client-user to docker-entrypoint.d directory.
 # xref: https://github.com/docker-library/mongo/issues/329#issuecomment-460858099
 COPY 000-ssl-client-user.sh /docker-entrypoint-initdb.d/
-
-RUN chmod -c 755 /usr/local/bin/peer-finder \
- /usr/local/bin/replicaset.sh \
- /usr/local/bin/configdb.sh \
- /usr/local/bin/sharding.sh \
- /usr/local/bin/mongos.sh
 
 ENV SSL_MODE ""
 ENV CLUSTER_AUTH_MODE ""
