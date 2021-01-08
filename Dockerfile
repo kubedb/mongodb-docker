@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM mongo:4.2.3
+FROM percona/percona-server-mongodb:3.6.18
 
 # Copy ssl-client-user to docker-entrypoint.d directory.
 # xref: https://github.com/docker-library/mongo/issues/329#issuecomment-460858099
@@ -20,6 +20,12 @@ COPY 000-ssl-client-user.sh /docker-entrypoint-initdb.d/
 
 ENV SSL_MODE ""
 ENV CLUSTER_AUTH_MODE ""
+
+# Pre-install openssl
+USER 0
+RUN set -ex; \
+    yum install -y openssl
+USER 1001
 
 # For starting mongodb container
 # default entrypoint of parent mongo:4.1.13
