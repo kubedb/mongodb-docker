@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM mongo:4.2.3
+FROM mongo:4.4.6
 
 # Copy ssl-client-user to docker-entrypoint.d directory.
 # xref: https://github.com/docker-library/mongo/issues/329#issuecomment-460858099
